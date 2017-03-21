@@ -96,8 +96,10 @@ int main(int argc, char* argv[]) {
 					SDL_Surface* sshot = SDL_CreateRGBSurface(0, Width, Height, 32, 0x00ff0000, 0x0000ff00,
 					0x000000ff, 0xff000000);
 					SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, sshot->pixels, sshot->pitch);
-					char file_name[36] = {"screenshots/screenshot-"};
+					char file_name[38] = {"screenshots/screenshot-"};
 					timestamp(&file_name[23]);
+					file_name[33]='.';file_name[34]='b';file_name[35]='m';file_name[36]='p';file_name[37]=0;
+					std::cout << file_name << std::endl;
 					SDL_SaveBMP(sshot, file_name);
 					SDL_FreeSurface(sshot);
 					break; }
