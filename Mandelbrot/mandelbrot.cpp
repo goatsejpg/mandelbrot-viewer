@@ -6,7 +6,7 @@
 #include "palette.h"
 
 Vec2 pos(-0.25, 0.0);
-double zoom = 2;
+double zoom = 2.0;
 Vec2 minN, maxN;
 Vec2 step;
 int iterations = 256;
@@ -15,16 +15,16 @@ double iteration_intensity = static_cast<double>(iterations) / 256.0;
 void set_min_max(const double& win_ratio, const int& Width, const int& Height) {
 	minN.x = pos.x - zoom; maxN.x = pos.x + zoom;
 	minN.y = pos.y - (zoom * win_ratio); maxN.y = pos.y + (zoom * win_ratio);
-	step.x = (maxN.x - minN.x) / Width;
-	step.y = (maxN.y - minN.y) / Height;
+	step.x = (maxN.x - minN.x) / (double)Width;
+	step.y = (maxN.y - minN.y) / (double)Height;
 }
 
 void set_min_max_from_rect(const SDL_Rect& rect, const double& win_ratio, const int& Width, const int& Height) {
 	pos = Vec2(
-		(2*minN.x+(rect.x*step.x)+((rect.x+rect.w)*step.x))/2.0,
-		(2*minN.y+(rect.y*step.y)+((rect.y+rect.h)*step.y))/2.0
+		(2.0*minN.x+(rect.x*step.x)+((rect.x+rect.w)*step.x))/2.0,
+		(2.0*minN.y+(rect.y*step.y)+((rect.y+rect.h)*step.y))/2.0
 	);
-	zoom = abs(rect.w * step.x / 2);
+	zoom = (rect.w * step.x / 2.0); if (zoom < 0.0) zoom *= -1;
 	set_min_max(win_ratio, Width, Height);
 }
 
