@@ -5,12 +5,9 @@
 #include "mandelbrot.h"
 #include "palette.h"
 #include "timestamp.h"
+#include "win.h"
 
-int Width = 1024, Height = 800;
-double WinRatio = Height / (double)(Width);
-int pixels = Width * Height;
-
-void update_win(const SDL_Event* evt, SDL_Texture* texture, SDL_Renderer* r) {
+void update_win(SDL_Texture* texture, SDL_Renderer* r) {
 	SDL_GetRendererOutputSize(r, &Width, &Height);
 	SDL_Texture* temp = SDL_CreateTexture(r, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
 	                                      Width, Height);;
@@ -25,9 +22,8 @@ void update_win(const SDL_Event* evt, SDL_Texture* texture, SDL_Renderer* r) {
 	SDL_RenderCopy(r, temp, NULL, NULL);
 	SDL_SetRenderTarget(r, NULL);
 
-	WinRatio = Height / (double)Width;
-	pixels = Width * Height;
-	set_min_max(WinRatio, Width, Height);
+	win_ratio = Height / static_cast<double>(Width);
+	set_min_max();
 	SDL_DestroyTexture(temp);
 }
 
@@ -52,6 +48,7 @@ int main(int argc, char* argv[]) {
 	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, 
 	                                         SDL_TEXTUREACCESS_TARGET, Width, Height); 
 	SDL_RenderPresent(renderer);
+	update_win(texture, renderer);
 
 	bool quit = false;
 	bool render_frame = true;
@@ -83,9 +80,9 @@ int main(int argc, char* argv[]) {
 				if ((evt.button.button == SDL_BUTTON_LEFT || evt.button.button == SDL_BUTTON_RIGHT) && selecting_zoom) {
 					selecting_zoom = false;
 					if (!zoom_out)
-						set_min_max_from_rect(mouse_rect, WinRatio, Width, Height);
+						set_min_max_from_rect(mouse_rect);
 					else
-						zoom = zoom / (mouse_rect.x / (double)Width);
+						zoom = zoom / (mouse_rect.x / static_cast<double>(Width));
 					
 					render_frame = true;
 					zoom_out = false;
@@ -105,7 +102,7 @@ int main(int argc, char* argv[]) {
 				case SDLK_F5: {
 					// screenshots
 					SDL_Surface* sshot = SDL_CreateRGBSurface(0, Width, Height, 32, 0x00ff0000, 0x0000ff00,
-					0x000000ff, 0xff000000);
+						0x000000ff, 0xff000000);
 					SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, sshot->pixels, sshot->pitch);
 					char file_name[38] = {"screenshots/screenshot-"};
 					timestamp(&file_name[23]);
@@ -115,6 +112,7 @@ int main(int argc, char* argv[]) {
 					SDL_FreeSurface(sshot);
 					break; }
 				case SDLK_F6:
+					// resets view
 					pos = Vec2(-0.25, 0.0);
 					zoom = 2.0;
 					render_frame = true;
@@ -134,17 +132,17 @@ int main(int argc, char* argv[]) {
 				break;
 			case SDL_WINDOWEVENT:
 				if (evt.window.event == SDL_WINDOWEVENT_RESIZED) {
-					update_win(&evt, texture, renderer);
+					update_win(texture, renderer);
 				}
 				break;
 			}
 		}
 		
 		if (render_frame) {
-			update_win(&evt, texture, renderer);
+			update_win(texture, renderer);
 			SDL_RenderClear(renderer);
-			set_min_max(WinRatio, Width, Height);
-			render(renderer, &evt, Width, Height, quit, texture, pixels);
+			set_min_max();
+			render(renderer, texture);
 			render_frame = false;
 		}
 

@@ -19,11 +19,11 @@ extern Vec2 step;
 extern double iteration_intensity;
 extern int iterations;
 
-void set_min_max(const double& win_ratio, const int& Width, const int& Height);
-void set_min_max_from_rect(const SDL_Rect& rect, const double& win_ratio, const int& Width, const int& Height);
-void mandelbrot(unsigned char** p, int __CORE, const int& Height, int& step, char extra);
-void func(int x, int y, unsigned char& pixel);
+void set_min_max();
+void set_min_max_from_rect(const SDL_Rect& rect);
+void mandelbrot(unsigned char** p, int __CORE, int& s, char extra);
+void mandelbrot_get_intensity(const int& x, const int& y, unsigned char& pixel);
 
-void render(SDL_Renderer* r, SDL_Event* evt, const int& Width, const int& Height, bool& play, SDL_Texture* texture, const int& pixels);
+void render(SDL_Renderer* r, SDL_Texture* texture);
 
 #endif // MANDELBROT_H
