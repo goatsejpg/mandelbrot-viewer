@@ -1,6 +1,9 @@
 #include <SDL2/SDL.h>
 #include <complex>
 #include <iostream>
+#include <thread>
+
+const int __CORES = std::thread::hardware_concurrency();
 
 #include "mandelbrot.h"
 #include "palette.h"
@@ -24,11 +27,11 @@ void set_min_max_from_rect(const SDL_Rect& rect, const double& win_ratio, const 
 		(2.0*minN.x+(rect.x*step.x)+((rect.x+rect.w)*step.x))/2.0,
 		(2.0*minN.y+(rect.y*step.y)+((rect.y+rect.h)*step.y))/2.0
 	);
-	zoom = (rect.w * step.x / 2.0); if (zoom < 0.0) zoom *= -1;
+	zoom = (rect.w * step.x / 2.0); if (zoom < 0.0) zoom *= -1.0;
 	set_min_max(win_ratio, Width, Height);
 }
 
-char func(const int& x, const int& y) {
+void func(int x, int y, unsigned char& pixel) {
 	std::complex<double> c(minN.x + (step.x * (double)x), minN.y + (step.y * (double)y));
 	std::complex<double> z(0.0, 0.0);
 
@@ -40,37 +43,60 @@ char func(const int& x, const int& y) {
 	}
 
 	if (ct == iterations) 
-		return 255; // ensures that it returns max even if iterations is a rather incompatible number
-	else
-		return (char)((double)ct * iteration_intensity);
+		pixel =  255;
+		// ensures that it returns max even if iterations is a rather incompatible number
+	else 
+		pixel = (unsigned char)((double)ct * iteration_intensity);
+}
+
+void mandelbrot(unsigned char** p, int __CORE, const int& Height, int& step, char extra) {
+	for (int x = step * __CORE; x < (step * __CORE) + step + extra; ++x) {
+		for (int y = 0; y < Height; ++y) {
+			func(x, y, p[x][y]);
+		}
+	}
 }
 
 void render(SDL_Renderer* r, SDL_Event* evt, const int& Width, const int& Height, bool& quit, SDL_Texture* texture, const int& pixels) {
+	int start = SDL_GetTicks(), end;
 	SDL_SetRenderTarget(r, texture);
-	int count = 0;
-	SDL_Rect rect;
-	for (short x = 0; x < Width; ++x) {
-		for (short y = 0; y < Height; ++y) {
-			char t = func(x,y);
-			set_color(r, t);
+	unsigned short temp = 0;		
+
+	//unsigned char p[Width][Height];
+	unsigned char** p = new unsigned char*[Width];
+	for (std::size_t i = 0; i < Width; ++i)
+		p[i] = new unsigned char[Height]; 
+	std::thread* threads[__CORES];
+
+	int step = Width / __CORES;
+	for (int t = 0; t < __CORES; ++t) {
+		char extra = 0;
+		if (Width % step && __CORES % 2) extra = 1;
+		threads[t] = new std::thread(mandelbrot, p, t, std::ref(Height), std::ref(step), extra);
+	}
+
+	for (std::size_t t = 0; t < __CORES; ++t) {
+		threads[t]->join();
+	}
+
+	for (std::size_t x = 0; x < Width; ++x) {
+		for (std::size_t y = 0; y < Height; ++y) {
+			set_color(r, p[x][y]);
 			SDL_RenderDrawPoint(r, x, y);
 		}
-		count += Height;
-		SDL_RenderPresent(r);
-		SDL_SetRenderTarget(r, NULL);
-		SDL_RenderCopy(r, texture, NULL, NULL);
-		SDL_SetRenderDrawColor(r, 50, 40, 255, 255);
-		rect = {0, 0, (int)(Width * (count / (double)pixels)), 5};
-		SDL_RenderFillRect(r, &rect);	
-
-		SDL_RenderPresent(r);
-		SDL_SetRenderTarget(r, texture);
-
-		if (SDL_PollEvent(evt) && evt->type == SDL_QUIT) {quit = true; goto skip;}
 	}
+
+	SDL_RenderPresent(r);
+
 	SDL_RenderPresent(r);
 	SDL_SetRenderTarget(r, NULL);
+	SDL_RenderCopy(r, texture, NULL, NULL);
 	SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
-	skip:
-		NULL;
+
+	for (std::size_t t = 0; t < __CORES; ++t)
+		delete threads[t];
+	for (std::size_t i = 0; i < Width; ++i)
+		delete[] p[i];
+	end = SDL_GetTicks();
+	std::cout << end - start << " ms" << std::endl;
 }

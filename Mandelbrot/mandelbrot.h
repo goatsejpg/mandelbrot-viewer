@@ -4,7 +4,6 @@
 #define MANDELBROT_H
 
 #include <SDL2/SDL.h>
-#include <complex>
 
 struct Vec2 {
 	double x,y;
@@ -22,7 +21,8 @@ extern int iterations;
 
 void set_min_max(const double& win_ratio, const int& Width, const int& Height);
 void set_min_max_from_rect(const SDL_Rect& rect, const double& win_ratio, const int& Width, const int& Height);
-char func(const int& x, const int& y);
+void mandelbrot(unsigned char** p, int __CORE, const int& Height, int& step, char extra);
+void func(int x, int y, unsigned char& pixel);
 
 void render(SDL_Renderer* r, SDL_Event* evt, const int& Width, const int& Height, bool& play, SDL_Texture* texture, const int& pixels);
 

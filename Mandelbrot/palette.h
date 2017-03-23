@@ -14,6 +14,6 @@ extern Palette active_palette;
 
 void default_palette();
 
-void set_color(SDL_Renderer* r, char intensity);
+void set_color(SDL_Renderer* r, const unsigned char& intensity);
 
 #endif // PALETTE_H

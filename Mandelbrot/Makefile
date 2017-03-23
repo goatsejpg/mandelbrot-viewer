@@ -6,7 +6,7 @@ FLAGS = -std=c++11
 
 TARGET = mandelbrot
 
-LIBS = -lSDL2
+LIBS = -lSDL2 -pthread
 
 $(TARGET):
 	$(CC) $(FLAGS) $(FILES) -o $(TARGET) $(LIBS)

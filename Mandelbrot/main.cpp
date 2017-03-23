@@ -12,13 +12,23 @@ int pixels = Width * Height;
 
 void update_win(const SDL_Event* evt, SDL_Texture* texture, SDL_Renderer* r) {
 	SDL_GetRendererOutputSize(r, &Width, &Height);
+	SDL_Texture* temp = SDL_CreateTexture(r, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
+	                                      Width, Height);;
+	SDL_SetRenderTarget(r, temp);
+	SDL_RenderCopy(r, texture, NULL, NULL);
+	SDL_SetRenderTarget(r, NULL);
 	SDL_DestroyTexture(texture);
 	texture = SDL_CreateTexture(r, SDL_PIXELFORMAT_ARGB8888,
 	                            SDL_TEXTUREACCESS_TARGET, Width, Height);
+
+	SDL_SetRenderTarget(r, texture);
+	SDL_RenderCopy(r, temp, NULL, NULL);
+	SDL_SetRenderTarget(r, NULL);
+
 	WinRatio = Height / (double)Width;
 	pixels = Width * Height;
-	std::cout << Width << ' ' << Height << std::endl;
 	set_min_max(WinRatio, Width, Height);
+	SDL_DestroyTexture(temp);
 }
 
 int main(int argc, char* argv[]) {
